@@ -41,13 +41,6 @@ Cells and Villages (visible upon selection)
 **Visualization Settings**
 Polygon Boundaries: Set polygon boundaries of the suitability_class and susceptibility_class layers to zero width to improve visual clarity.
 
-
-
-
-
-
-
-
 **Code**
 
 !pip install geopandas folium matplotlib
