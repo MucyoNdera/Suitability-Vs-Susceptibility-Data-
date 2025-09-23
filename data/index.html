@@ -1,1 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Soil Erosion Susceptibility Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; width: 100%; }
+    .legend {
+      background: white;
+      line-height: 18px;
+      padding: 8px;
+      border: 2px solid gray;
+      border-radius: 6px;
+    }
+    .legend i {
+      width: 18px;
+      height: 18px;
+      float: left;
+      margin-right: 8px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Initialize map
+    var map = L.map('map').setView([-1.5007, 29.6325], 12);
+
+    // Add base map
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Susceptibility colors
+    function getColor(susClass) {
+      switch(susClass) {
+        case 'Extremely Susceptible': return '#A80000';
+        case 'Highly Susceptible': return '#FF5500';
+        case 'Moderate Susceptible': return '#F5CA7A';
+        case 'Slightly Susceptible': return '#E1E1E1';
+        default: return '#CCCCCC';
+      }
+    }
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties.Susceptibility_Class),
+        weight: 0.5,
+        opacity: 1,
+        color: 'black',
+        fillOpacity: 0.8
+      };
+    }
+
+    // Add layers from GitHub
+    var susceptibility = "https://raw.githubusercontent.com/MucyoNdera/Suitability-Vs-Susceptibility-Data-/main/data/Rev_SoilErosion__Susceptibility.geojson";
+    var district = "https://raw.githubusercontent.com/MucyoNdera/Suitability-Vs-Susceptibility-Data-/main/data/Musanze_District_Boundary.geojson";
+    var sectors = "https://raw.githubusercontent.com/MucyoNdera/Suitability-Vs-Susceptibility-Data-/main/data/Sectors.geojson";
+    var restricted = "https://raw.githubusercontent.com/MucyoNdera/Suitability-Vs-Susceptibility-Data-/main/data/Restricted_Areas.geojson";
+
+    // District boundary
+    fetch(district).then(res => res.json()).then(data => {
+      L.geoJSON(data, {style: {color: "black", weight: 2, fillOpacity: 0}}).addTo(map);
+    });
+
+    // Sectors
+    fetch(sectors).then(res => res.json()).then(data => {
+      L.geoJSON(data, {style: {color: "black", weight: 0.8, fillOpacity: 0}}).addTo(map);
+    });
+
+    // Restricted areas
+    fetch(restricted).then(res => res.json()).then(data => {
+      L.geoJSON(data, {
+        style: {color: "black", weight: 2, fillOpacity: 0.2},
+        onEachFeature: function (feature, layer) {
+          if (feature.properties.NAME) {
+            layer.bindTooltip(feature.properties.NAME);
+          }
+        }
+      }).addTo(map);
+    });
+
+    // Susceptibility layer
+    fetch(susceptibility).then(res => res.json()).then(data => {
+      L.geoJSON(data, {
+        style: style,
+        onEachFeature: function (feature, layer) {
+          layer.bindTooltip(
+            "Class: " + feature.properties.Susceptibility_Class + "<br>Area: " + feature.properties.Area_ha + " ha"
+          );
+        }
+      }).addTo(map);
+    });
+
+    // Legend
+    var legend = L.control({position: 'topright'});
+    legend.onAdd = function (map) {
+      var div = L.DomUtil.create('div', 'legend');
+      div.innerHTML += "<b>Soil Erosion Susceptibility</b><br>";
+      div.innerHTML += '<i style="background:#A80000"></i>Extremely Susceptible<br>';
+      div.innerHTML += '<i style="background:#FF5500"></i>Highly Susceptible<br>';
+      div.innerHTML += '<i style="background:#F5CA7A"></i>Moderate Susceptible<br>';
+      div.innerHTML += '<i style="background:#E1E1E1"></i>Slightly Susceptible<br>';
+      return div;
+    };
+    legend.addTo(map);
+  </script>
+</body>
+</html>
 
